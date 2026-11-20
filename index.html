@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Check-in Berdua 💕</title>
+<title>Check-in Pacar - Wajah + Sidik Jari 💕</title>
 <style>
 *{box-sizing:border-box;font-family:system-ui,sans-serif}
 body{margin:0;background:#1a0b14;color:#fff;padding:14px;padding-bottom:40px}
-.header{text-align:center;padding:12px 0 18px}
+.header{text-align:center;padding:12px 0 10px}
 .header h1{margin:0;font-size:22px}
 .header p{margin:4px 0 0;color:#fda4af;font-size:13px}
 .card{background:#2a1220;border:1px solid #4a1d33;border-radius:16px;padding:16px;margin-bottom:14px}
@@ -16,78 +16,88 @@ input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px soli
 button{width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
 .btn-pink{background:#ec4899;color:#fff}
 .btn-blue{background:#3b82f6;color:#fff}
+.btn-green{background:#22c55e;color:#fff}
 .btn-dark{background:#4a1d33;color:#fff}
 video{width:100%;border-radius:12px;background:#000;aspect-ratio:4/3;object-fit:cover}
 .status{font-size:13px;background:#1a0b14;padding:10px;border-radius:10px;margin-top:8px;color:#fda4af}
 .ok{color:#4ade80}.fail{color:#f87171}
 .item{background:#1a0b14;border:1px solid #4a1d33;border-radius:12px;padding:12px;margin-bottom:10px}
-.item b{font-size:15px}
-.item small{color:#fda4af}
 .tabs{display:flex;gap:8px;margin-bottom:14px}
 .tabs button{margin:0;background:#2a1220;color:#fda4af;width:auto;flex:1;padding:10px;font-size:13px}
 .tabs button.active{background:#ec4899;color:#fff}
 .hidden{display:none}
 canvas{display:none}
-.footer{text-align:center;color:#9d6a7d;font-size:12px;margin-top:10px}
 .consent{background:#3b1226;border:1px dashed #ec4899;padding:12px;border-radius:12px;font-size:13px;line-height:1.5;margin-bottom:12px}
+.footer{text-align:center;color:#9d6a7d;font-size:12px;margin-top:10px}
 </style>
 </head>
 <body>
 
 <div class="header">
-<h1>💕 Check-in Berdua</h1>
-<p>Saling kabar, biar gak khawatir • Harus pencet sendiri</p>
+<h1>💕 Check-in Pacar</h1>
+<p>Wajah + Sidik Jari + GPS • Harus Pencet Sendiri</p>
 </div>
 
 <div class="consent">
-<b>Perjanjian kita:</b><br>
-Ini bukan alat ngintip. Yang check-in harus pencet sendiri, foto sendiri, dan tau kalo lokasinya dikirim ke pasangan. Kalo gak nyaman, boleh skip, jangan dipaksa.
+<b>Perjanjian:</b> Ini bukan alat ngintip. Yang check-in harus tau, harus pencet sidik jari sendiri, dan foto wajah sendiri. Kalo gak setuju, jangan dipaksa.
 </div>
 
 <div class="tabs">
-<button id="tabCheckin" class="active" onclick="showTab('checkin')">📍 Check-in</button>
+<button id="tabDaftar" class="active" onclick="showTab('daftar')">📝 Daftar Pacar</button>
+<button id="tabCheckin" onclick="showTab('checkin')">📍 Check-in</button>
 <button id="tabAdmin" onclick="showTab('admin')">👑 Liat Check-in</button>
 </div>
 
+<!-- DAFTAR PACAR - SEKALI AJA DI HP DIA -->
+<div id="page-daftar" class="card">
+<h3>1. Daftar Dulu (Di HP Dia, Sekali Aja)</h3>
+<p style="font-size:13px;color:#fda4af">Ini buat ngerekam wajah + sidik jari dia. Lakuin bareng-bareng, di HP dia.</p>
+<input id="namaDaftar" placeholder="Nama - contoh: Sayang">
+<button class="btn-blue" onclick="mulaiKamera('daftar')">📷 1. Scan Wajah Daftar</button>
+<video id="videoDaftar" autoplay playsinline muted></video>
+<div class="status" id="statusWajahDaftar">Belum ada foto wajah</div>
+<button class="btn-dark" onclick="daftarSidikJari()">👆 2. Daftarkan Sidik Jari Dia</button>
+<div class="status" id="statusJariDaftar">Belum daftar sidik jari</div>
+<button class="btn-green" onclick="simpanDaftar()">💾 3. SIMPAN DAFTAR</button>
+<div class="status" id="statusSimpan"></div>
+</div>
+
 <!-- CHECK-IN -->
-<div id="page-checkin" class="card">
-<h3>1. Aku Lagi Di Sini</h3>
-<select id="pilihNama">
-  <option value="Sayang">Sayang (Pacar)</option>
-  <option value="Aku">Aku (Kamu)</option>
-</select>
-<textarea id="lagiNgapain" rows="2" placeholder="Lagi ngapain? Contoh: lagi nongkrong di kafe sama Teman, lagi di kampus..."></textarea>
-<input id="samaSiapa" placeholder="Lagi sama siapa? Contoh: sama Teman, sama keluarga, sendiri">
-<button class="btn-blue" onclick="mulaiKamera()">📷 1. Foto Selfie (Wajib Live)</button>
+<div id="page-checkin" class="card hidden">
+<h3>2. Check-in Harian</h3>
+<textarea id="lagiNgapain" rows="2" placeholder="Lagi ngapain? Contoh: lagi nongkrong di kafe sama Teman"></textarea>
+<input id="samaSiapa" placeholder="Lagi sama siapa? Contoh: sama Teman, sendiri, sama keluarga">
+<button class="btn-blue" onclick="mulaiKamera('checkin')">📷 1. Scan Wajah Live (Harus Muka Dia)</button>
 <video id="videoCheckin" autoplay playsinline muted></video>
-<div class="status" id="statusFoto">Belum ada foto</div>
-<button class="btn-pink" onclick="kirimCheckin()">📍 2. KIRIM CHECK-IN + LOKASI GPS</button>
-<div class="status" id="hasilCheckin"></div>
+<div class="status" id="statusWajahCheckin">Belum scan wajah</div>
+<button class="btn-pink" onclick="checkinSidikJari()">👆 2. Check-in Pakai Sidik Jari + GPS</button>
+<div class="status" id="hasilCheckin">Belum check-in</div>
 </div>
 
 <!-- ADMIN -->
 <div id="page-admin" class="card hidden">
-<h3>👑 Liat Check-in Pasangan</h3>
-<p style="font-size:13px;color:#fda4af">Masukin PIN yang udah disepakati berdua.</p>
+<h3>👑 Liat Semua Check-in</h3>
 <input id="pinAdmin" type="password" placeholder="PIN Berdua">
-<button class="btn-pink" onclick="cekAdmin()">🔓 LIHAT SEMUA CHECK-IN</button>
+<button class="btn-pink" onclick="cekAdmin()">🔓 LIHAT</button>
 <div id="dataAdmin" style="margin-top:12px"></div>
 </div>
 
 <canvas id="canvas"></canvas>
-<div class="footer">Check-in Berdua • Saling percaya, saling kabar</div>
+<div class="footer">Check-in Pacar • Wajah + Sidik Jari + GPS</div>
 
 <script>
 // ===== GANTI 2 INI DOANG =====
 const SHEET_URL = "GANTI_DENGAN_LINK_APPS_SCRIPT_LU";
-const PIN_ADMIN = "1234"; // GANTI PIN YANG UDAH DISEPAKATI BERDUA
+const PIN_ADMIN = "1234"; // PIN YANG UDAH DISEPAKATI BERDUA
 // ==============================
 
-let fotoCheckin = null;
-let streamAktif = null;
+let fotoDaftar = null, sidikJariID = null, fotoCheckin = null, streamAktif = null;
+
+function getDB(){ return JSON.parse(localStorage.getItem('pacarDB') || '{}'); }
+function saveDB(db){ localStorage.setItem('pacarDB', JSON.stringify(db)); }
 
 function showTab(t){
-  ['checkin','admin'].forEach(x=>{
+  ['daftar','checkin','admin'].forEach(x=>{
     document.getElementById('page-'+x).classList.add('hidden');
     document.getElementById('tab'+x.charAt(0).toUpperCase()+x.slice(1)).classList.remove('active');
   });
@@ -96,63 +106,104 @@ function showTab(t){
 }
 function stopKamera(){ if(streamAktif){ streamAktif.getTracks().forEach(t=>t.stop()); streamAktif=null; } }
 
-async function mulaiKamera(){
+async function mulaiKamera(mode){
   try{
     stopKamera();
-    let video = document.getElementById('videoCheckin');
+    let video = document.getElementById(mode==='daftar' ? 'videoDaftar' : 'videoCheckin');
     streamAktif = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}, audio:false});
     video.srcObject = streamAktif;
-    document.getElementById('statusFoto').innerHTML = "Kamera nyala... Senyum! Foto otomatis 2 detik lagi...";
+    let el = document.getElementById(mode==='daftar' ? 'statusWajahDaftar' : 'statusWajahCheckin');
+    el.innerHTML = "Kamera nyala... Senyum! Foto otomatis 2 detik lagi...";
     setTimeout(()=>{
       let c = document.getElementById('canvas');
       c.width = video.videoWidth; c.height = video.videoHeight;
       c.getContext('2d').drawImage(video,0,0);
-      fotoCheckin = c.toDataURL('image/jpeg', 0.5);
-      document.getElementById('statusFoto').innerHTML = "<span class='ok'>✅ Selfie ke-foto!</span>";
+      let foto = c.toDataURL('image/jpeg', 0.5);
+      if(mode==='daftar'){ fotoDaftar = foto; el.innerHTML = "<span class='ok'>✅ Wajah daftar ke-foto!</span>"; }
+      else { fotoCheckin = foto; el.innerHTML = "<span class='ok'>✅ Wajah Live terverifikasi!</span>"; }
       stopKamera();
     }, 2000);
   }catch(e){ alert("Kamera gagal: " + e.message); }
 }
+
+function bufToB64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
 
 function getLokasi(){
   return new Promise(res=>{
     if(!navigator.geolocation) return res("GPS tidak support");
     navigator.geolocation.getCurrentPosition(
       p => res("https://maps.google.com/?q=" + p.coords.latitude + "," + p.coords.longitude),
-      e => res("LOKASI DITOLAK - Check-in dibatalkan, harus nyalain GPS")
+      e => res("LOKASI DITOLAK - MENCURIGAKAN!")
     );
   });
 }
 
-async function kirimCheckin(){
-  let nama = document.getElementById('pilihNama').value;
-  let ngapain = document.getElementById('lagiNgapain').value.trim();
-  let samaSiapa = document.getElementById('samaSiapa').value.trim();
-  if(!fotoCheckin){ alert("Foto selfie dulu!"); return; }
-  if(!ngapain){ alert("Isi dulu lagi ngapain, biar pasangan lu gak khawatir!"); return; }
-  document.getElementById('hasilCheckin').innerHTML = "Mengambil lokasi GPS...";
-  let lokasi = await getLokasi();
-  if(lokasi.includes("DITOLAK")){ alert("Nyalain GPS dulu, biar pasangan lu tau lu beneran di situ."); return; }
-
-  // Kirim ke Sheets
-  if(!SHEET_URL.includes("GANTI_")){
+async function kirimKeSheets(nama, jenis, ngapain, samaSiapa, lokasi, foto){
+  if(SHEET_URL.includes("GANTI_")) return;
+  try{
     await fetch(SHEET_URL, {
       method: "POST", mode: "no-cors", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        nama: nama,
-        waktu: new Date().toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'}),
-        ngapain: ngapain,
-        samaSiapa: samaSiapa,
-        lokasi: lokasi,
-        foto: fotoCheckin
-      })
+      body: JSON.stringify({nama, jenis, waktu: new Date().toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'}), ngapain, samaSiapa, lokasi, foto})
     });
-  }
-  document.getElementById('hasilCheckin').innerHTML = "<span class='ok'>✅ Check-in terkirim! Pasangan lu udah bisa liat lu lagi di mana.</span>";
-  alert("Terkirim! 💕");
-  fotoCheckin = null;
-  document.getElementById('lagiNgapain').value = "";
-  document.getElementById('samaSiapa').value = "";
+  }catch(e){ console.log(e); }
+}
+
+async function daftarSidikJari(){
+  let nama = document.getElementById('namaDaftar').value.trim();
+  if(!nama){ alert("Isi nama dulu!"); return; }
+  try{
+    const cred = await navigator.credentials.create({
+      publicKey:{
+        challenge: new Uint8Array([1,2,3,4,5,6,7,8]),
+        rp:{name:"Check-in Pacar"},
+        user:{id: new TextEncoder().encode("pacar1"), name: nama, displayName: nama},
+        pubKeyCredParams:[{alg:-7, type:"public-key"}],
+        authenticatorSelection:{authenticatorAttachment:"platform", userVerification:"required"},
+        timeout:60000
+      }
+    });
+    sidikJariID = bufToB64(cred.rawId);
+    document.getElementById('statusJariDaftar').innerHTML = "<span class='ok'>✅ Sidik jari dia ke-daftar!</span>";
+  }catch(e){ alert("Sidik jari gagal / dibatalkan. Harus di HP dia, dan harus pake HTTPS."); }
+}
+
+async function simpanDaftar(){
+  let nama = document.getElementById('namaDaftar').value.trim();
+  if(!nama || !fotoDaftar || !sidikJariID){ alert("Lengkapi dulu: Nama + Foto Wajah + Sidik Jari!"); return; }
+  let db = getDB();
+  db["pacar"] = {nama, fotoWajah: fotoDaftar, sidikJariID};
+  saveDB(db);
+  let lokasi = await getLokasi();
+  await kirimKeSheets(nama, "DAFTAR BARU", "Daftar sidik jari + wajah", "-", lokasi, fotoDaftar);
+  document.getElementById('statusSimpan').innerHTML = "<span class='ok'>✅ Berhasil daftar " + nama + "</span>";
+  alert("Berhasil! Sekarang dia udah bisa check-in pakai sidik jari.");
+}
+
+async function checkinSidikJari(){
+  let db = getDB();
+  let orang = db["pacar"];
+  if(!orang){ alert("Belum daftar! Daftar dulu di Tab Daftar, di HP dia."); return; }
+  if(!fotoCheckin){ alert("Scan wajah dulu!"); return; }
+  let ngapain = document.getElementById('lagiNgapain').value.trim();
+  let samaSiapa = document.getElementById('samaSiapa').value.trim();
+  if(!ngapain){ alert("Isi dulu lagi ngapain!"); return; }
+  try{
+    const cred = await navigator.credentials.get({
+      publicKey:{ challenge: new Uint8Array([1,2,3,4,5,6,7,8]), timeout:60000, userVerification:"required" }
+    });
+    let id = bufToB64(cred.rawId);
+    if(id !== orang.sidikJariID){
+      document.getElementById('hasilCheckin').innerHTML = "<span class='fail'>❌ SIDIK JARI TIDAK COCOK! GAGAL CHECK-IN. Bukan sidik jari dia!</span>";
+      let lokasi = await getLokasi();
+      await kirimKeSheets(orang.nama, "GAGAL - SIDIK JARI SALAH", ngapain, samaSiapa, lokasi, fotoCheckin);
+      return;
+    }
+    let lokasi = await getLokasi();
+    if(lokasi.includes("DITOLAK")){ alert("Nyalain GPS dulu!"); return; }
+    await kirimKeSheets(orang.nama, "CHECK-IN", ngapain, samaSiapa, lokasi, fotoCheckin);
+    document.getElementById('hasilCheckin').innerHTML = "<span class='ok'>✅ CHECK-IN BERHASIL!<br>" + orang.nama + " - " + ngapain + "<br>📍 " + lokasi + "</span>";
+    fotoCheckin = null;
+  }catch(e){ document.getElementById('hasilCheckin').innerHTML = "<span class='fail'>❌ Sidik jari gagal / dibatalkan</span>"; }
 }
 
 async function cekAdmin(){
@@ -163,13 +214,13 @@ async function cekAdmin(){
     let res = await fetch(SHEET_URL);
     let data = await res.json();
     data.reverse();
-    let html = `<p><b>Total ${data.length} check-in</b></p>`;
+    let html = `<p><b>Total ${data.length} data</b></p>`;
     data.forEach(row=>{
-      // row = [Nama, Waktu, Lagi Ngapain, Sama Siapa, Lokasi, Foto]
-      html += `<div class="item">
+      let isGagal = row[1] && row[1].includes("GAGAL");
+      html += `<div class="item" style="${isGagal ? 'border:1px solid #ef4444' : ''}">
         <b>${row[0]}</b> - ${row[1]}<br>
-        <small>📝 ${row[2]}<br>👥 Sama: ${row[3]}<br>📍 <a href="${row[4]}" target="_blank" style="color:#ec4899">Buka di Google Maps</a></small><br>
-        ${row[5] ? `<img src="${row[5]}" style="width:90px;height:90px;object-fit:cover;border-radius:10px;margin-top:6px">` : ""}
+        <small>🕒 ${row[2]}<br>📝 ${row[3]}<br>👥 Sama: ${row[4]}<br>📍 <a href="${row[5]}" target="_blank" style="color:#ec4899">Buka di Google Maps</a></small><br>
+        ${row[6] ? `<img src="${row[6]}" style="width:90px;height:90px;object-fit:cover;border-radius:10px;margin-top:6px">` : ""}
       </div>`;
     });
     document.getElementById('dataAdmin').innerHTML = html;
