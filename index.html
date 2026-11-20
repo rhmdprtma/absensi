@@ -1,1 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Absensi Wajah + Sidik Jari</title>
+<style>
+*{box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+body{margin:0;background:#0f172a;color:#fff;padding:14px;padding-bottom:40px}
+.header{text-align:center;padding:12px 0 18px}
+.header h1{margin:0;font-size:22px}
+.header p{margin:4px 0 0;color:#94a3b8;font-size:13px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:16px;margin-bottom:14px}
+.card h3{margin:0 0 12px;font-size:16px}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;margin-bottom:10px;font-size:15px}
+button{width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
+.btn-green{background:#22c55e;color:#fff}
+.btn-blue{background:#3b82f6;color:#fff}
+.btn-orange{background:#f97316;color:#fff}
+.btn-dark{background:#334155;color:#fff}
+video{width:100%;border-radius:12px;background:#000;aspect-ratio:4/3;object-fit:cover}
+.status{font-size:13px;background:#0f172a;padding:10px;border-radius:10px;margin-top:8px;color:#cbd5e1}
+.ok{color:#4ade80}.fail{color:#f87171}
+.item{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px;margin-bottom:10px}
+.item b{font-size:15px}
+.item small{color:#94a3b8}
+.badge{display:inline-block;background:#22c55e;color:#fff;font-size:11px;padding:3px 8px;border-radius:99px}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tabs button{margin:0;background:#1e293b;color:#cbd5e1}
+.tabs button.active{background:#22c55e;color:#fff}
+.hidden{display:none}
+canvas{display:none}
+.footer{text-align:center;color:#64748b;font-size:12px;margin-top:10px}
+</style>
+</head>
+<body>
 
+<div class="header">
+<h1>📸 Absensi Sekolah</h1>
+<p>Wajah + Sidik Jari • Pakai HP Aja</p>
+<p id="linkInfo" style="color:#4ade80"></p>
+</div>
+
+<div class="tabs">
+<button id="tabDaftar" class="active" onclick="showTab('daftar')">📝 Daftar</button>
+<button id="tabAbsen" onclick="showTab('absen')">✅ Absen</button>
+<button id="tabList" onclick="showTab('list')">👥 Daftar Orang</button>
+</div>
+
+<!-- DAFTAR -->
+<div id="page-daftar" class="card">
+<h3>1. Daftarkan Orang Baru</h3>
+<input id="nama" placeholder="Nama Lengkap - contoh: Budi Santoso">
+<input id="nis" placeholder="NIS / ID - contoh: 12345">
+<button class="btn-blue" onclick="mulaiKamera('daftar')">📷 Buka Kamera & Foto Wajah</button>
+<video id="videoDaftar" autoplay playsinline muted></video>
+<div class="status" id="statusWajah">Belum ada foto wajah</div>
+<button class="btn-dark" onclick="daftarSidikJari()">👆 Daftarkan Sidik Jari HP</button>
+<div class="status" id="statusJari">Belum daftar sidik jari</div>
+<button class="btn-green" onclick="simpanOrang()">💾 SIMPAN ORANG</button>
+<div class="status" id="statusSimpan"></div>
+</div>
+
+<!-- ABSEN -->
+<div id="page-absen" class="card hidden">
+<h3>2. Absen Sekarang</h3>
+<p style="font-size:13px;color:#cbd5e1">Pilih nama kamu dulu, lalu verifikasi wajah + sidik jari.</p>
+<select id="pilihAbsen" style="width:100%;padding:12px;border-radius:10px;background:#0f172a;color:#fff;border:1px solid #475569"></select>
+<button class="btn-blue" onclick="mulaiKamera('absen')">📷 Verifikasi Wajah</button>
+<video id="videoAbsen" autoplay playsinline muted></video>
+<div class="status" id="statusAbsenWajah">Belum verifikasi wajah</div>
+<button class="btn-orange" onclick="absenSidikJari()">👆 Absen Pakai Sidik Jari</button>
+<div class="status" id="hasilAbsen">Belum absen</div>
+</div>
+
+<!-- LIST -->
+<div id="page-list" class="card hidden">
+<h3>3. Daftar Orang Terdaftar</h3>
+<div id="listOrang"></div>
+<button class="btn-dark" onclick="exportCSV()">⬇️ Download Rekap CSV</button>
+<button class="btn-dark" onclick="if(confirm('Hapus semua data?')){localStorage.removeItem('absensiDB');tampilkan();alert('Dihapus')}">🗑️ Hapus Semua Data</button>
+</div>
+
+<canvas id="canvas"></canvas>
+<div class="footer">tamayana / absensi • Data tersimpan di HP (localStorage)</div>
+
+<script>
+let fotoWajahDaftar = null;
+let sidikJariID = null;
+let fotoWajahAbsen = null;
+let streamAktif = null;
+
+function getDB(){ return JSON.parse(localStorage.getItem('absensiDB') || '{}'); }
+function saveDB(db){ localStorage.setItem('absensiDB', JSON.stringify(db)); tampilkan(); }
+
+function showTab(t){
+  ['daftar','absen','list'].forEach(x=>{
+    document.getElementById('page-'+x).classList.add('hidden');
+    document.getElementById('tab'+x.charAt(0).toUpperCase()+x.slice(1)).classList.remove('active');
+  });
+  document.getElementById('page-'+t).classList.remove('hidden');
+  document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active');
+  if(t==='absen'||t==='list') tampilkan();
+}
+
+function stopKamera(){
+  if(streamAktif){ streamAktif.getTracks().forEach(t=>t.stop()); streamAktif=null; }
+}
+
+async function mulaiKamera(mode){
+  try{
+    stopKamera();
+    let video = document.getElementById(mode==='daftar' ? 'videoDaftar' : 'videoAbsen');
+    streamAktif = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}, audio:false});
+    video.srcObject = streamAktif;
+    let statusEl = document.getElementById(mode==='daftar' ? 'statusWajah' : 'statusAbsenWajah');
+    statusEl.innerHTML = "Kamera nyala... Senyum! Foto otomatis 2 detik lagi...";
+    setTimeout(()=>{
+      let c = document.getElementById('canvas');
+      c.width = video.videoWidth; c.height = video.videoHeight;
+      c.getContext('2d').drawImage(video,0,0);
+      let foto = c.toDataURL('image/jpeg', 0.6);
+      if(mode==='daftar'){ fotoWajahDaftar = foto; statusEl.innerHTML = "<span class='ok'>✅ Wajah ke-foto! Lanjut ke sidik jari.</span>"; }
+      else { fotoWajahAbsen = foto; statusEl.innerHTML = "<span class='ok'>✅ Wajah terverifikasi! Lanjut ke sidik jari.</span>"; }
+      stopKamera();
+    }, 2000);
+  }catch(e){ alert("Kamera gagal: " + e.message + "\nCoba buka lewat HTTPS / GitHub Pages, jangan dari file langsung."); }
+}
+
+function bufToB64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+
+async function daftarSidikJari(){
+  let nama = document.getElementById('nama').value.trim();
+  if(!nama){ alert("Isi nama dulu!"); return; }
+  try{
+    const cred = await navigator.credentials.create({
+      publicKey:{
+        challenge: new Uint8Array([1,2,3,4,5,6,7,8]),
+        rp:{name:"Absensi Sekolah"},
+        user:{id: new TextEncoder().encode(document.getElementById('nis').value || "user1"), name: nama, displayName: nama},
+        pubKeyCredParams:[{alg:-7, type:"public-key"}],
+        authenticatorSelection:{authenticatorAttachment:"platform", userVerification:"required"},
+        timeout:60000
+      }
+    });
+    sidikJariID = bufToB64(cred.rawId);
+    document.getElementById('statusJari').innerHTML = "<span class='ok'>✅ Sidik jari HP ke-daftar!</span>";
+  }catch(e){ alert("Sidik jari gagal / dibatalkan. Pastikan HP lu ada sidik jari & pake HTTPS."); }
+}
+
+function simpanOrang(){
+  let nama = document.getElementById('nama').value.trim();
+  let nis = document.getElementById('nis').value.trim();
+  if(!nama || !nis){ alert("Isi nama & NIS dulu!"); return; }
+  if(!fotoWajahDaftar){ alert("Foto wajah dulu!"); return; }
+  if(!sidikJariID){ alert("Daftarkan sidik jari dulu!"); return; }
+  let db = getDB();
+  if(db[nis] && !confirm("NIS ini udah ada, timpa?")) return;
+  db[nis] = {nama, fotoWajah: fotoWajahDaftar, sidikJariID, absensi:[]};
+  saveDB(db);
+  document.getElementById('statusSimpan').innerHTML = "<span class='ok'>✅ Berhasil daftar " + nama + "</span>";
+  document.getElementById('nama').value=""; document.getElementById('nis').value="";
+  fotoWajahDaftar=null; sidikJariID=null;
+  document.getElementById('statusWajah').innerText="Belum ada foto wajah";
+  document.getElementById('statusJari').innerText="Belum daftar sidik jari";
+  alert("Berhasil! " + nama + " udah ke-daftar.");
+}
+
+async function absenSidikJari(){
+  let nis = document.getElementById('pilihAbsen').value;
+  if(!nis){ alert("Pilih nama dulu!"); return; }
+  if(!fotoWajahAbsen){ alert("Verifikasi wajah dulu!"); return; }
+  let db = getDB();
+  let orang = db[nis];
+  if(!orang){ alert("Orang tidak ketemu"); return; }
+  try{
+    const cred = await navigator.credentials.get({
+      publicKey:{ challenge: new Uint8Array([1,2,3,4,5,6,7,8]), timeout:60000, userVerification:"required" }
+    });
+    let id = bufToB64(cred.rawId);
+    if(id !== orang.sidikJariID){
+      document.getElementById('hasilAbsen').innerHTML = "<span class='fail'>❌ Sidik jari tidak cocok dengan " + orang.nama + "</span>";
+      return;
+    }
+    let waktu = new Date().toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'});
+    orang.absensi.push(waktu);
+    saveDB(db);
+    document.getElementById('hasilAbsen').innerHTML = "<span class='ok'>✅ ABSEN BERHASIL!<br>" + orang.nama + "<br>" + waktu + "</span>";
+    fotoWajahAbsen = null;
+    document.getElementById('statusAbsenWajah').innerText = "Belum verifikasi wajah";
+  }catch(e){ document.getElementById('hasilAbsen').innerHTML = "<span class='fail'>❌ Sidik jari gagal / dibatalkan</span>"; }
+}
+
+function tampilkan(){
+  let db = getDB();
+  let list = document.getElementById('listOrang');
+  let select = document.getElementById('pilihAbsen');
+  select.innerHTML = "";
+  let html = "";
+  let keys = Object.keys(db);
+  if(keys.length===0){ html = "<p style='color:#94a3b8'>Belum ada orang. Daftar dulu di tab Daftar.</p>"; }
+  keys.forEach(nis=>{
+    let d = db[nis];
+    select.innerHTML += `<option value="${nis}">${d.nama} (${nis})</option>`;
+    let absenHtml = d.absensi.length ? d.absensi.map(a=>`• ${a}`).join("<br>") : "<i>Belum pernah absen</i>";
+    html += `<div class="item"><div style="display:flex;gap:10px;align-items:center"><img src="${d.fotoWajah}" style="width:56px;height:56px;object-fit:cover;border-radius:50%"><div><b>${d.nama}</b><br><small>NIS: ${nis} • <span class="badge">${d.absensi.length}x Absen</span></small></div></div><div style="margin-top:8px;font-size:13px">${absenHtml}</div></div>`;
+  });
+  list.innerHTML = html;
+}
+
+function exportCSV(){
+  let db = getDB();
+  let csv = "Nama,NIS,Waktu Absen\n";
+  for(let nis in db){ db[nis].absensi.forEach(w=>{ csv += `"${db[nis].nama}","${nis}","${w}"\n`; }); }
+  let blob = new Blob([csv], {type:'text/csv'});
+  let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "rekap-absensi.csv"; a.click();
+}
+
+tampilkan();
+document.getElementById('linkInfo').innerText = "Link live: tamayana.github.io/absensi/";
+</script>
+</body>
+</html>
